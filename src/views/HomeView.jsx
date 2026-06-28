@@ -1,0 +1,182 @@
+import { colors, tone, fonts, order, catLabel, currentUser } from '../theme';
+import { greeting, longDate, shortDate } from '../dates';
+import { Avatar, Card, Pill, Check, ProgressBar } from '../components/ui';
+import { useIsNarrow } from '../useMediaQuery';
+
+const DUE_RANK = { overdue: 0, today: 1, soon: 2 };
+
+export function HomeView({ tasks, systems, vehicles, week, onToggle, setView }) {
+  const narrow = useIsNarrow();
+  const today = week.days[week.todayIndex].date;
+
+  const doneCount = tasks.filter((t) => t.done).length;
+  const overdueCount = tasks.filter((t) => !t.done && t.dueType === 'overdue').length;
+  const todoCount = tasks.filter((t) => !t.done && t.dueType !== 'overdue').length;
+
+  const upNext = tasks
+    .filter((t) => !t.done)
+    .sort((a, b) => DUE_RANK[a.dueType] - DUE_RANK[b.dueType])
+    .slice(0, 6);
+
+  const family = order.map((name) => {
+    const mine = tasks.filter((t) => t.who === name);
+    const done = mine.filter((t) => t.done).length;
+    const pct = mine.length ? Math.round((done / mine.length) * 100) : 0;
+    return { name, done, total: mine.length, pct };
+  });
+
+  const v = vehicles[0];
+
+  return (
+    <div>
+      {/* hero + family */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: narrow ? '1fr' : '1.1fr 1fr',
+          gap: 22,
+          alignItems: 'stretch',
+          marginBottom: 22,
+        }}
+      >
+        {/* hero */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg,#c2724a,#a85a3a)',
+            borderRadius: 20,
+            padding: '28px 30px',
+            color: '#fff',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
+          <div style={{ position: 'absolute', right: 40, bottom: -60, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
+          <div style={{ font: `400 31px/1.15 ${fonts.serif}`, maxWidth: 340, position: 'relative' }}>
+            {greeting()}, {currentUser}. The home needs a little love this week.
+          </div>
+          <div style={{ display: 'flex', gap: 36, marginTop: 26, position: 'relative' }}>
+            <HeroStat n={todoCount} label="to do" />
+            <HeroStat n={overdueCount} label="overdue" />
+            <HeroStat n={doneCount} label="done" />
+          </div>
+          <div style={{ font: `400 13px ${fonts.sans}`, opacity: 0.8, marginTop: 24, position: 'relative' }}>
+            {longDate(today)} · Week of {shortDate(week.monday)}
+          </div>
+        </div>
+
+        {/* family */}
+        <Card style={{ padding: '22px 26px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+            <div style={{ font: `400 22px ${fonts.serif}`, color: colors.ink }}>The family this week</div>
+            <button onClick={() => setView('chores')} style={{ font: `500 12.5px ${fonts.sans}`, color: colors.accent }}>
+              Manage chores
+            </button>
+          </div>
+          {family.map((p) => (
+            <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 15 }}>
+              <Avatar who={p.name} size={36} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', font: `600 14px ${fonts.sans}`, color: colors.ink }}>
+                  <span>{p.name}</span>
+                  <span style={{ color: colors.muted, fontWeight: 500, fontSize: 12 }}>
+                    {p.done} / {p.total} done
+                  </span>
+                </div>
+                <div style={{ marginTop: 6 }}>
+                  <ProgressBar pct={p.pct} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </Card>
+      </div>
+
+      {/* up next */}
+      <Card style={{ padding: '22px 26px', marginBottom: 22 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+          <div style={{ font: `400 22px ${fonts.serif}`, color: colors.ink }}>Up next</div>
+          <button onClick={() => setView('calendar')} style={{ font: `500 12.5px ${fonts.sans}`, color: colors.accent }}>
+            See the week
+          </button>
+        </div>
+        {upNext.map((t) => (
+          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', borderTop: `1px solid ${colors.divider}` }}>
+            <Check done={t.done} onClick={() => onToggle(t.id)} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  font: `600 14px ${fonts.sans}`,
+                  color: t.done ? colors.faint : colors.ink,
+                  textDecoration: t.done ? 'line-through' : 'none',
+                }}
+              >
+                {t.title}
+              </div>
+              <div style={{ font: `400 12px ${fonts.sans}`, color: colors.muted, marginTop: 2 }}>
+                {catLabel[t.cat]} · {t.note || t.who}
+              </div>
+            </div>
+            <Pill task={t} />
+          </div>
+        ))}
+      </Card>
+
+      {/* vehicle + systems summary */}
+      <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 1fr', gap: 22 }}>
+        <Card as="button" style={{ padding: '22px 26px', cursor: 'pointer', textAlign: 'left' }} onClick={() => setView('vehicles')}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+            <div style={{ font: `400 22px ${fonts.serif}`, color: colors.ink }}>In the driveway</div>
+            <div style={{ font: `500 12px ${fonts.sans}`, color: colors.muted }}>{vehicles.length} cars</div>
+          </div>
+          <div style={{ font: `600 14.5px ${fonts.sans}`, color: colors.ink }}>
+            {v.name} <span style={{ fontWeight: 400, fontSize: 12, color: colors.muted }}>· {v.miles}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', font: `500 12px ${fonts.sans}`, color: colors.muted, margin: '12px 0 7px' }}>
+            <span>Next oil change</span>
+            <span style={{ color: tone.red, fontWeight: 600 }}>{v.oilLeft}</span>
+          </div>
+          <ProgressBar pct={v.oilPct} height={7} />
+          <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+            <SummaryChip>Reg. renews {v.reg}</SummaryChip>
+            <SummaryChip>Tires rotated {v.tires.split(' ')[0]}</SummaryChip>
+          </div>
+        </Card>
+
+        <Card as="button" style={{ padding: '22px 26px', cursor: 'pointer', textAlign: 'left' }} onClick={() => setView('systems')}>
+          <div style={{ font: `400 22px ${fonts.serif}`, color: colors.ink, marginBottom: 14 }}>House health</div>
+          {systems.slice(0, 4).map((s) => (
+            <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '8px 0', borderBottom: `1px solid ${colors.divider}` }}>
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: tone[s.tone], flexShrink: 0 }} />
+              <div style={{ flex: 1, font: `500 13.5px ${fonts.sans}`, color: colors.ink }}>{s.name}</div>
+              <div style={{ font: `600 12px ${fonts.sans}`, color: statusColor(s.tone), whiteSpace: 'nowrap' }}>{s.status}</div>
+            </div>
+          ))}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function HeroStat({ n, label }) {
+  return (
+    <div>
+      <div style={{ font: `600 38px ${fonts.sans}`, lineHeight: 1 }}>{n}</div>
+      <div style={{ font: `400 13px ${fonts.sans}`, opacity: 0.82, marginTop: 3 }}>{label}</div>
+    </div>
+  );
+}
+
+function SummaryChip({ children }) {
+  return (
+    <span style={{ font: `500 11.5px ${fonts.sans}`, color: colors.muted3, background: colors.chipBg, padding: '5px 11px', borderRadius: 20 }}>
+      {children}
+    </span>
+  );
+}
+
+export function statusColor(t) {
+  if (t === 'red') return tone.red;
+  if (t === 'amber') return tone.amberText;
+  return tone.green;
+}
