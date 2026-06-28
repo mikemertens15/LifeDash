@@ -1,12 +1,15 @@
-import { colors, tone, fonts, order, catLabel, currentUser } from '../theme';
+import { colors, tone, fonts, catLabel } from '../theme';
 import { greeting, longDate, shortDate } from '../dates';
 import { Avatar, Card, Pill, Check, ProgressBar } from '../components/ui';
 import { useIsNarrow } from '../useMediaQuery';
+import { useHousehold } from '../household/HouseholdProvider';
 
 const DUE_RANK = { overdue: 0, today: 1, soon: 2 };
 
 export function HomeView({ tasks, systems, vehicles, week, onToggle, setView }) {
   const narrow = useIsNarrow();
+  const { order, currentMember } = useHousehold();
+  const greetingName = currentMember?.name || 'there';
   const today = week.days[week.todayIndex].date;
 
   const doneCount = tasks.filter((t) => t.done).length;
@@ -53,7 +56,7 @@ export function HomeView({ tasks, systems, vehicles, week, onToggle, setView }) 
           <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
           <div style={{ position: 'absolute', right: 40, bottom: -60, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,.05)' }} />
           <div style={{ font: `400 31px/1.15 ${fonts.serif}`, maxWidth: 340, position: 'relative' }}>
-            {greeting()}, {currentUser}. The home needs a little love this week.
+            {greeting()}, {greetingName}. The home needs a little love this week.
           </div>
           <div style={{ display: 'flex', gap: 36, marginTop: 26, position: 'relative' }}>
             <HeroStat n={todoCount} label="to do" />

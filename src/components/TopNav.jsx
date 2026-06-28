@@ -1,5 +1,6 @@
-import { colors, fonts, currentUser } from '../theme';
+import { colors, fonts } from '../theme';
 import { Avatar } from './ui';
+import { useHousehold } from '../household/HouseholdProvider';
 
 const NAV = [
   ['home', 'Home'],
@@ -9,7 +10,8 @@ const NAV = [
   ['calendar', 'Calendar'],
 ];
 
-export function TopNav({ view, setView, onAdd }) {
+export function TopNav({ view, setView, onAdd, onOpenHousehold }) {
+  const { currentMember } = useHousehold();
   return (
     <div
       style={{
@@ -80,7 +82,14 @@ export function TopNav({ view, setView, onAdd }) {
         >
           <span style={{ fontSize: 16, lineHeight: 1, marginTop: -1 }}>+</span> Add task
         </button>
-        <Avatar who={currentUser} size={36} />
+        <button
+          onClick={onOpenHousehold}
+          aria-label="Household and account"
+          title="Household & account"
+          style={{ borderRadius: '50%', padding: 0, lineHeight: 0, cursor: 'pointer' }}
+        >
+          <Avatar who={currentMember?.name} size={36} />
+        </button>
       </div>
     </div>
   );

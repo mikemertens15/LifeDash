@@ -10,9 +10,11 @@ The hero question, every week: **what needs doing.**
 
 - **React 19 + Vite** — runs as a responsive web app on desktop, phone, and a
   kitchen tablet. Installable as a PWA later.
-- **No backend (yet).** Tasks are saved in the browser via `localStorage`, so
-  the app is fully usable on one device today. Multi-user sync (e.g. Supabase)
-  is the natural next step.
+- **Supabase backend** — Postgres + Auth + Row-Level Security. Family members
+  sign in with a passwordless **magic link**, create or join a **household**
+  (the shared space) via an invite code, and **tasks sync in real time** across
+  every device. Each household's data is isolated by RLS. Vehicles & systems are
+  still shared demo seed data — making them per-household is the next step.
 
 ## Run it
 
@@ -23,19 +25,40 @@ npm run build    # production build → dist/
 npm run preview  # serve the production build
 ```
 
+### Backend config
+
+The Supabase URL + publishable key live in `.env.local` (gitignored):
+
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=sb_publishable_...
+```
+
+One-time setup in the Supabase dashboard → **Authentication → URL Configuration**:
+add your app origins (e.g. `http://localhost:5173` for dev, plus any deployed
+URL) to **Site URL / Redirect URLs** so magic-link emails redirect back to the
+app.
+
 ## Where things live
 
 ```
 src/
-  App.jsx            # nav + view switching + modal wiring
-  theme.js           # palette, fonts, family members
-  seed.js            # demo data (tasks, vehicles, systems)
+  App.jsx            # auth/household gating + nav + view switching + modal wiring
+  theme.js           # palette, fonts, avatar color palette
+  seed.js            # demo data (vehicles, systems)
   dates.js           # live week / greeting / "today" helpers
-  useStore.js        # task state + localStorage persistence
   useMediaQuery.js   # responsive breakpoints
+  lib/supabase.js    # configured Supabase browser client
+  auth/              # AuthProvider (session + magic link), SignIn screen
+  household/         # HouseholdProvider (members/roster), Onboarding, HouseholdModal
+  data/useTasks.js   # Supabase-backed tasks: CRUD + realtime sync (was useStore)
   components/        # TopNav, AddTaskModal, TaskRow, shared UI (Avatar, Pill…)
   views/             # HomeView, ChoresView, VehiclesView, SystemsView, CalendarView
 ```
+
+The database schema (households, household_members, tasks), Row-Level Security
+policies, and the `create_household` / `join_household` RPCs live as Supabase
+migrations on the project.
 
 ## Views
 
@@ -48,9 +71,9 @@ src/
 
 ## Ideas for next
 
-- Accounts + shared database so the whole family syncs across devices.
+- Per-household vehicles & systems (currently shared demo seed data, read-only).
 - Recurring tasks that auto-reschedule when completed.
-- Editable vehicles/systems (currently seed data).
+- Email-based invites (alongside the current shareable join code).
 - PWA manifest + service worker for offline + home-screen install.
 - The design also includes skins **A** (calm/minimal) and **C** (dark wall
   display) if you want a theme switcher later.

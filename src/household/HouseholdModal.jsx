@@ -1,0 +1,182 @@
+import { useState, useEffect } from 'react';
+import { colors, fonts } from '../theme';
+import { Avatar } from '../components/ui';
+import { useHousehold } from './HouseholdProvider';
+import { useAuth } from '../auth/AuthProvider';
+
+// Account + household management, opened from the TopNav avatar: share the
+// invite code, see/add members, and sign out.
+export function HouseholdModal({ onClose }) {
+  const { household, members, addMember, currentMember } = useHousehold();
+  const { signOut } = useAuth();
+  const [newName, setNewName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  async function add() {
+    if (!newName.trim() || busy) return;
+    setBusy(true);
+    try {
+      await addMember(newName);
+      setNewName('');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function copyCode() {
+    navigator.clipboard?.writeText(household?.join_code || '');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        background: 'rgba(58,46,37,.4)',
+        backdropFilter: 'blur(3px)',
+        WebkitBackdropFilter: 'blur(3px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Household and account"
+        style={{
+          width: 460,
+          maxWidth: '100%',
+          background: colors.card,
+          borderRadius: 22,
+          padding: '28px 30px',
+          boxShadow: '0 24px 60px rgba(40,25,15,.3)',
+          maxHeight: '88vh',
+          overflowY: 'auto',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <div style={{ font: `400 25px ${fonts.serif}`, color: colors.ink }}>
+            {household?.name || 'Your household'}
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{ width: 30, height: 30, borderRadius: '50%', background: colors.chipBg, color: colors.muted2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ font: `400 13px ${fonts.sans}`, color: colors.muted, marginBottom: 22 }}>
+          {members.length} {members.length === 1 ? 'person' : 'people'}
+        </div>
+
+        {/* Invite code */}
+        <Label>Invite the family</Label>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            background: colors.inputBg,
+            border: `1px solid ${colors.cardBorder}`,
+            borderRadius: 12,
+            padding: '12px 14px',
+            marginBottom: 24,
+          }}
+        >
+          <div style={{ font: `700 20px ${fonts.mono}`, color: colors.ink, letterSpacing: '.18em' }}>
+            {household?.join_code}
+          </div>
+          <button
+            onClick={copyCode}
+            style={{ padding: '8px 14px', borderRadius: 18, background: colors.accent, color: '#fff', font: `600 12.5px ${fonts.sans}`, cursor: 'pointer' }}
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+
+        {/* Members */}
+        <Label>People in this household</Label>
+        <div style={{ marginBottom: 18 }}>
+          {members.map((m) => (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
+              <Avatar who={m.name} size={34} />
+              <div style={{ flex: 1, font: `600 14px ${fonts.sans}`, color: colors.ink }}>{m.name}</div>
+              {m.user_id ? (
+                <span style={{ font: `600 11px ${fonts.sans}`, color: colors.muted2, background: colors.chipBg, padding: '4px 10px', borderRadius: 20 }}>
+                  {m.id === currentMember?.id ? 'You' : 'Has login'}
+                </span>
+              ) : (
+                <span style={{ font: `500 11px ${fonts.sans}`, color: colors.faint }}>No login</span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Add person */}
+        <Label>Add a person</Label>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 26 }}>
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && add()}
+            placeholder="e.g. Theo"
+            style={{
+              flex: 1,
+              border: '1px solid #e5d6c3',
+              background: colors.inputBg,
+              borderRadius: 12,
+              padding: '11px 14px',
+              font: `500 14px ${fonts.sans}`,
+              color: colors.ink,
+              outline: 'none',
+            }}
+          />
+          <button
+            onClick={add}
+            disabled={busy || !newName.trim()}
+            style={{
+              padding: '11px 18px',
+              borderRadius: 12,
+              background: colors.accent,
+              color: '#fff',
+              font: `600 13px ${fonts.sans}`,
+              opacity: busy || !newName.trim() ? 0.6 : 1,
+              cursor: busy || !newName.trim() ? 'default' : 'pointer',
+            }}
+          >
+            Add
+          </button>
+        </div>
+        <div style={{ font: `400 12px/1.5 ${fonts.sans}`, color: colors.muted, marginTop: -16, marginBottom: 22 }}>
+          People you add can be assigned chores. To give someone their own login, share the invite code above.
+        </div>
+
+        <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: 18, display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={signOut} style={{ font: `600 13px ${fonts.sans}`, color: colors.accentDark, cursor: 'pointer' }}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Label({ children }) {
+  return <div style={{ font: `600 12px ${fonts.sans}`, color: colors.muted2, marginBottom: 8 }}>{children}</div>;
+}

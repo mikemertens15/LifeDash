@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { colors, fonts, order } from '../theme';
+import { colors, fonts } from '../theme';
 import { Avatar } from './ui';
+import { useHousehold } from '../household/HouseholdProvider';
 
 const CATS = [
   ['chore', 'Chore'],
@@ -9,9 +10,10 @@ const CATS = [
 ];
 
 export function AddTaskModal({ onClose, onAdd }) {
+  const { order, currentMember } = useHousehold();
   const [title, setTitle] = useState('');
   const [cat, setCat] = useState('chore');
-  const [who, setWho] = useState('Lena');
+  const [who, setWho] = useState(currentMember?.name || order[0] || '');
   const inputRef = useRef(null);
 
   useEffect(() => {

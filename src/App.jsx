@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { colors } from './theme';
+import { colors, fonts } from './theme';
 import { getWeek } from './dates';
-import { useStore } from './useStore';
+import { useTasks } from './data/useTasks';
 import { seedSystems, seedVehicles } from './seed';
 import { TopNav } from './components/TopNav';
 import { AddTaskModal } from './components/AddTaskModal';
@@ -10,18 +10,41 @@ import { ChoresView } from './views/ChoresView';
 import { VehiclesView } from './views/VehiclesView';
 import { SystemsView } from './views/SystemsView';
 import { CalendarView } from './views/CalendarView';
+import { useAuth } from './auth/AuthProvider';
+import { useHousehold } from './household/HouseholdProvider';
+import { SignIn } from './auth/SignIn';
+import { Onboarding } from './household/Onboarding';
+import { HouseholdModal } from './household/HouseholdModal';
 
 export default function App() {
+  const { session, loading: authLoading } = useAuth();
+  const { household, loading: householdLoading } = useHousehold();
+
+  // Gate: load session → sign in → load household → onboarding → the app.
+  if (authLoading) return <Splash />;
+  if (!session) return <SignIn />;
+  if (householdLoading) return <Splash />;
+  if (!household) return <Onboarding />;
+  return <Dashboard />;
+}
+
+function Dashboard() {
   const [view, setView] = useState('home');
   const [modalOpen, setModalOpen] = useState(false);
-  const { tasks, toggle, addTask } = useStore();
+  const [householdOpen, setHouseholdOpen] = useState(false);
+  const { tasks, toggle, addTask } = useTasks();
 
   // Computed once per mount — the real current week drives greeting + calendar.
   const week = useMemo(() => getWeek(), []);
 
   return (
     <div style={{ minHeight: '100vh', background: colors.bg }}>
-      <TopNav view={view} setView={setView} onAdd={() => setModalOpen(true)} />
+      <TopNav
+        view={view}
+        setView={setView}
+        onAdd={() => setModalOpen(true)}
+        onOpenHousehold={() => setHouseholdOpen(true)}
+      />
 
       <main style={{ maxWidth: 1180, margin: '0 auto', padding: '30px 36px 70px' }}>
         {view === 'home' && (
@@ -41,6 +64,23 @@ export default function App() {
       </main>
 
       {modalOpen && <AddTaskModal onClose={() => setModalOpen(false)} onAdd={addTask} />}
+      {householdOpen && <HouseholdModal onClose={() => setHouseholdOpen(false)} />}
+    </div>
+  );
+}
+
+function Splash() {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: colors.bg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div style={{ font: `400 25px ${fonts.serif}`, color: colors.muted }}>Tend</div>
     </div>
   );
 }

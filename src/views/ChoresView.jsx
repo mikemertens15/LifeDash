@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { colors, fonts, order, catLabel } from '../theme';
+import { colors, fonts, catLabel } from '../theme';
 import { Card } from '../components/ui';
 import { TaskRow } from '../components/TaskRow';
+import { useHousehold } from '../household/HouseholdProvider';
 
 export function ChoresView({ tasks, onToggle, onAdd }) {
   const [filter, setFilter] = useState('all');
+  const { order } = useHousehold();
 
   const chores = tasks.filter((t) => t.cat === 'chore');
   const visible = chores.filter((t) => filter === 'all' || t.who === filter);

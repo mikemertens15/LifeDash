@@ -1,8 +1,10 @@
-import { colors, tone, people } from '../theme';
+import { colors, tone } from '../theme';
+import { useHousehold } from '../household/HouseholdProvider';
 
-// Round person avatar with their initial.
+// Round person avatar with their initial. Member colors come from the household.
 export function Avatar({ who, size = 36 }) {
-  const p = people[who] || { bg: '#ddd', color: '#555', initial: '?' };
+  const { peopleMap } = useHousehold();
+  const p = peopleMap[who] || { bg: '#ddd', color: '#555', initial: who ? who[0].toUpperCase() : '?' };
   return (
     <div
       style={{

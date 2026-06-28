@@ -1,15 +1,17 @@
-import { colors, tone, fonts, people } from '../theme';
+import { colors, tone, fonts } from '../theme';
 import { weekRangeLabel } from '../dates';
 import { useIsNarrow } from '../useMediaQuery';
+import { useHousehold } from '../household/HouseholdProvider';
 
-function chipColor(t) {
+function chipColor(t, peopleMap) {
   if (t.done) return tone.green;
   if (t.dueType === 'overdue') return tone.red;
-  return people[t.who] ? people[t.who].bg : tone.amber;
+  return peopleMap[t.who] ? peopleMap[t.who].bg : tone.amber;
 }
 
 export function CalendarView({ tasks, week }) {
   const narrow = useIsNarrow();
+  const { peopleMap } = useHousehold();
   const { days, todayIndex } = week;
 
   return (
@@ -69,7 +71,7 @@ export function CalendarView({ tasks, week }) {
                     opacity: t.done ? 0.55 : 1,
                   }}
                 >
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: chipColor(t), flexShrink: 0, marginTop: 4 }} />
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: chipColor(t, peopleMap), flexShrink: 0, marginTop: 4 }} />
                   <div style={{ font: `500 11px ${fonts.sans}`, color: colors.ink, lineHeight: 1.25, overflow: 'hidden' }}>
                     {t.title}
                   </div>

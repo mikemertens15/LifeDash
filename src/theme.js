@@ -26,17 +26,15 @@ export const tone = {
   green: '#7f9b86',
 };
 
-export const people = {
-  Lena:   { initial: 'L', bg: '#e2b4ba', color: '#5a2730' },
-  Marcus: { initial: 'M', bg: '#a9c3b3', color: '#234034' },
-  Amara:  { initial: 'A', bg: '#e6cda0', color: '#5a4419' },
-  Theo:   { initial: 'T', bg: '#b6cbe0', color: '#274056' },
-};
-
-export const order = ['Lena', 'Marcus', 'Amara', 'Theo'];
-
-// The signed-in member (top-right avatar + greeting).
-export const currentUser = 'Lena';
+// Member avatar colors. Real members live in the database now (see
+// HouseholdProvider); this palette is cycled through to color new members so
+// each person in a household gets a distinct, on-brand avatar.
+export const AVATAR_PALETTE = [
+  { bg: '#e2b4ba', color: '#5a2730' },
+  { bg: '#a9c3b3', color: '#234034' },
+  { bg: '#e6cda0', color: '#5a4419' },
+  { bg: '#b6cbe0', color: '#274056' },
+];
 
 export const catLabel = { chore: 'Chore', vehicle: 'Vehicle', system: 'Home' };
 
