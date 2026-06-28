@@ -2,12 +2,21 @@ import { colors, fonts } from '../theme';
 import { Avatar } from './ui';
 import { useHousehold } from '../household/HouseholdProvider';
 
-const NAV = [
-  ['home', 'Home'],
-  ['chores', 'Chores'],
-  ['vehicles', 'Vehicles'],
-  ['systems', 'Systems'],
-  ['calendar', 'Calendar'],
+// Grouped navigation. Home is the always-first landing pad; the rest cluster
+// into the "Household" (home-maintenance) and "Life" domains so the app can grow
+// past the home dashboard without crowding a flat tab bar.
+const NAV_GROUPS = [
+  { label: null, items: [['home', 'Home']] },
+  {
+    label: 'Household',
+    items: [
+      ['chores', 'Chores'],
+      ['vehicles', 'Vehicles'],
+      ['systems', 'Systems'],
+      ['calendar', 'Calendar'],
+    ],
+  },
+  { label: 'Life', items: [['watchlist', 'Watchlist']] },
 ];
 
 export function TopNav({ view, setView, onAdd, onOpenHousehold }) {
@@ -37,31 +46,56 @@ export function TopNav({ view, setView, onAdd, onOpenHousehold }) {
         <nav
           style={{
             display: 'flex',
+            alignItems: 'center',
             gap: 4,
             overflowX: 'auto',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
           }}
         >
-          {NAV.map(([key, label]) => {
-            const active = view === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setView(key)}
-                style={{
-                  padding: '8px 15px',
-                  borderRadius: 22,
-                  whiteSpace: 'nowrap',
-                  background: active ? colors.chipBg : 'transparent',
-                  color: active ? colors.ink : colors.muted2,
-                  font: `${active ? 600 : 500} 13.5px ${fonts.sans}`,
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={group.label ?? 'home'} style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              {gi > 0 && (
+                <span
+                  aria-hidden="true"
+                  style={{ width: 1, height: 18, background: colors.cardBorder, margin: '0 8px', flexShrink: 0 }}
+                />
+              )}
+              {group.label && (
+                <span
+                  style={{
+                    font: `600 9.5px ${fonts.sans}`,
+                    letterSpacing: '.06em',
+                    textTransform: 'uppercase',
+                    color: colors.faint,
+                    marginRight: 2,
+                    flexShrink: 0,
+                  }}
+                >
+                  {group.label}
+                </span>
+              )}
+              {group.items.map(([key, label]) => {
+                const active = view === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setView(key)}
+                    style={{
+                      padding: '8px 15px',
+                      borderRadius: 22,
+                      whiteSpace: 'nowrap',
+                      background: active ? colors.chipBg : 'transparent',
+                      color: active ? colors.ink : colors.muted2,
+                      font: `${active ? 600 : 500} 13.5px ${fonts.sans}`,
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { colors, fonts } from './theme';
 import { getWeek } from './dates';
 import { useTasks } from './data/useTasks';
+import { useMedia } from './data/useMedia';
 import { seedSystems, seedVehicles } from './seed';
 import { TopNav } from './components/TopNav';
 import { AddTaskModal } from './components/AddTaskModal';
@@ -10,6 +11,7 @@ import { ChoresView } from './views/ChoresView';
 import { VehiclesView } from './views/VehiclesView';
 import { SystemsView } from './views/SystemsView';
 import { CalendarView } from './views/CalendarView';
+import { WatchlistView } from './views/WatchlistView';
 import { useAuth } from './auth/AuthProvider';
 import { useHousehold } from './household/HouseholdProvider';
 import { SignIn } from './auth/SignIn';
@@ -33,6 +35,7 @@ function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [householdOpen, setHouseholdOpen] = useState(false);
   const { tasks, toggle, addTask } = useTasks();
+  const { items: media, addItem, updateItem, removeItem } = useMedia();
 
   // Computed once per mount — the real current week drives greeting + calendar.
   const week = useMemo(() => getWeek(), []);
@@ -52,6 +55,7 @@ function Dashboard() {
             tasks={tasks}
             systems={seedSystems}
             vehicles={seedVehicles}
+            media={media}
             week={week}
             onToggle={toggle}
             setView={setView}
@@ -61,6 +65,9 @@ function Dashboard() {
         {view === 'vehicles' && <VehiclesView vehicles={seedVehicles} />}
         {view === 'systems' && <SystemsView systems={seedSystems} />}
         {view === 'calendar' && <CalendarView tasks={tasks} week={week} />}
+        {view === 'watchlist' && (
+          <WatchlistView items={media} addItem={addItem} updateItem={updateItem} removeItem={removeItem} />
+        )}
       </main>
 
       {modalOpen && <AddTaskModal onClose={() => setModalOpen(false)} onAdd={addTask} />}

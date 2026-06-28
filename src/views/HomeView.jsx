@@ -3,10 +3,11 @@ import { greeting, longDate, shortDate } from '../dates';
 import { Avatar, Card, Pill, Check, ProgressBar } from '../components/ui';
 import { useIsNarrow } from '../useMediaQuery';
 import { useHousehold } from '../household/HouseholdProvider';
+import { KIND_NOUN } from '../data/useMedia';
 
 const DUE_RANK = { overdue: 0, today: 1, soon: 2 };
 
-export function HomeView({ tasks, systems, vehicles, week, onToggle, setView }) {
+export function HomeView({ tasks, systems, vehicles, media = [], week, onToggle, setView }) {
   const narrow = useIsNarrow();
   const { order, currentMember } = useHousehold();
   const greetingName = currentMember?.name || 'there';
@@ -29,6 +30,7 @@ export function HomeView({ tasks, systems, vehicles, week, onToggle, setView }) 
   });
 
   const v = vehicles[0];
+  const inProgress = media.filter((m) => m.status === 'active').slice(0, 5);
 
   return (
     <div>
@@ -157,6 +159,43 @@ export function HomeView({ tasks, systems, vehicles, week, onToggle, setView }) 
           ))}
         </Card>
       </div>
+
+      {/* a little life beyond the house */}
+      <Card style={{ padding: '22px 26px', marginTop: 22 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: inProgress.length ? 14 : 0 }}>
+          <div style={{ font: `400 22px ${fonts.serif}`, color: colors.ink }}>Currently playing &amp; watching</div>
+          <button onClick={() => setView('watchlist')} style={{ font: `500 12.5px ${fonts.sans}`, color: colors.accent }}>
+            Watchlist
+          </button>
+        </div>
+        {inProgress.length === 0 ? (
+          <div style={{ font: `400 13.5px ${fonts.sans}`, color: colors.muted, marginTop: 10 }}>
+            Nothing in progress — add a game, show, or movie to your watchlist.
+          </div>
+        ) : (
+          inProgress.map((m, i) => (
+            <div
+              key={m.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '11px 0',
+                borderTop: i > 0 ? `1px solid ${colors.divider}` : 'none',
+              }}
+            >
+              {m.owner && <Avatar who={m.owner} size={30} />}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: `600 14px ${fonts.sans}`, color: colors.ink }}>{m.title}</div>
+                <div style={{ font: `400 12px ${fonts.sans}`, color: colors.muted, marginTop: 2 }}>
+                  {[m.owner, m.platform || m.service].filter(Boolean).join(' · ') || '—'}
+                </div>
+              </div>
+              <SummaryChip>{KIND_NOUN[m.kind]}</SummaryChip>
+            </div>
+          ))
+        )}
+      </Card>
     </div>
   );
 }
